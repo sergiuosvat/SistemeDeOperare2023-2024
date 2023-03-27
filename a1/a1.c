@@ -11,7 +11,7 @@ int list_dir(const char *path, const char *filter)
     DIR *dir = NULL;
     struct dirent *entry = NULL;
     struct stat statbuf = {};
-    char fullPath[512];
+    char fullPath[512] = {};
     if (path == NULL)
     {
         perror("invalid directory path");
@@ -39,7 +39,7 @@ int list_dir(const char *path, const char *filter)
         if (filter == NULL)
         {
             printf("%s\n", fullPath);
-                }
+        }
         else if (strcmp(filter, "has_perm_write") == 0)
         {
             if (access(fullPath, W_OK) == 0 && (S_ISREG(statbuf.st_mode) || is_dir))
@@ -89,11 +89,11 @@ void list_dir_rec(const char *path, const char *filter)
         {
             printf("%s\n", fullPath);
         }
-        if(lstat(fullPath, &statbuf) == 0)
+        if (lstat(fullPath, &statbuf) == 0)
         {
-            if(S_ISDIR(statbuf.st_mode))
+            if (S_ISDIR(statbuf.st_mode))
             {
-                list_dir_rec(fullPath,filter);
+                list_dir_rec(fullPath, filter);
             }
         }
         memset(fullPath, 0, sizeof(fullPath));
@@ -104,10 +104,8 @@ void list_dir_rec(const char *path, const char *filter)
 int main(int argc, char **argv)
 {
     char *recursive = NULL;
-    char *filter = NULL;
-    char *path = NULL;
-    path = malloc(512 * sizeof(char));
-    filter = malloc(512 * sizeof(char));
+    char *filter = (char *)calloc(512, sizeof(char));
+    char *path = (char *)calloc(512, sizeof(char));
     if (argc >= 2)
     {
         if (strcmp(argv[1], "variant") == 0)
