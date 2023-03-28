@@ -10,17 +10,19 @@ int list_dir(const char *path, const char *filter)
 {
     DIR *dir = NULL;
     struct dirent *entry = NULL;
-    struct stat statbuf = {};
     char fullPath[512] = {};
+    struct stat statbuf;
     if (path == NULL)
     {
-        perror("invalid directory path");
+        puts("ERORR");
+        puts("invalid directory path");
         return -1;
     }
     dir = opendir(path);
     if (dir == NULL)
     {
-        perror("Could not open file");
+        puts("ERORR");
+        puts("Could not open file");
         return -1;
     }
     printf("SUCCESS\n");
@@ -30,21 +32,19 @@ int list_dir(const char *path, const char *filter)
         {
             continue;
         }
-        int is_dir = 0;
         snprintf(fullPath, 512, "%s/%s", path, entry->d_name);
-        if (lstat(fullPath, &statbuf) == 0)
-        {
-            is_dir = S_ISDIR(statbuf.st_mode);
-        }
         if (filter == NULL)
         {
             printf("%s\n", fullPath);
         }
         else if (strcmp(filter, "has_perm_write") == 0)
         {
-            if (access(fullPath, W_OK) == 0 && (S_ISREG(statbuf.st_mode) || is_dir))
+            if(lstat(fullPath, &statbuf) == 0)
             {
-                printf("%s\n", fullPath);
+                if(statbuf.st_uid == getuid() && (statbuf.st_mode & S_IWUSR) != 0)
+                {
+                    printf("%s\n", fullPath);
+                }
             }
         }
         else if (strstr(entry->d_name, filter) != NULL)
@@ -68,7 +68,8 @@ void list_dir_rec(const char *path, const char *filter)
     dir = opendir(path);
     if (dir == NULL)
     {
-        perror("Could not open directory");
+        puts("ERORR");
+        puts("Could not open directory");
         return;
     }
     while ((entry = readdir(dir)) != NULL)
@@ -80,9 +81,12 @@ void list_dir_rec(const char *path, const char *filter)
         snprintf(fullPath, 512, "%s/%s", path, entry->d_name);
         if (strcmp(filter, "has_perm_write") == 0)
         {
-            if (access(fullPath, W_OK) == 0)
+            if(lstat(fullPath, &statbuf) == 0)
             {
-                printf("%s\n", fullPath);
+                if(statbuf.st_uid == getuid() && (statbuf.st_mode & S_IWUSR) != 0)
+                {
+                    printf("%s\n", fullPath);
+                }
             }
         }
         else if (strstr(entry->d_name, filter) != NULL)
@@ -99,6 +103,34 @@ void list_dir_rec(const char *path, const char *filter)
         memset(fullPath, 0, sizeof(fullPath));
     }
     closedir(dir);
+}
+
+int parse(const char* path)
+{
+    FILE* fp;
+    fp = fopen(path,"r");
+    char magic[3];
+    int hs;
+    if(fp == NULL)
+    {
+        puts("ERORR");
+        puts("Could not open file");
+        return -1;
+    }
+    fseek(fp,-1,SEEK_END);
+    magic[0] = fgetc(fp);
+    fseek(fp,-2,SEEK_END);
+    magic[1] = fgetc(fp);
+    if(magic[0] != 'I' || magic[1] != 'Z')
+    {
+        puts("ERROR");
+        puts("wrong magic");
+    }
+    fseek(fp,-3,SEEK_END);
+    fscanf(fp,"%d",&hs);
+    
+    fclose(fp);
+    return 0;
 }
 
 int main(int argc, char **argv)
@@ -124,7 +156,7 @@ int main(int argc, char **argv)
                 {
                     strcpy(path, argv[i] + 5);
                 }
-                else if (strstr(argv[i], "="))
+                else if (strstr(argv[i], "name_ends_with="))
                 {
                     strcpy(filter, argv[i] + 15);
                 }
@@ -142,6 +174,11 @@ int main(int argc, char **argv)
                 printf("SUCCESS\n");
                 list_dir_rec(path, filter);
             }
+        }
+        if(strcmp(argv[1], "parse") == 0)
+        {
+            strcpy(path, argv[2]+5);
+            parse(path);
         }
         free(path);
         free(filter);
