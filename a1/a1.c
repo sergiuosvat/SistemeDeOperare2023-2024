@@ -116,7 +116,7 @@ void list_dir_rec(const char *path, const char *filter)
 
 int parse(const char *path)
 {
-    int fd, version, nr_sect, hs;
+    int fd, version = 0, nr_sect = 0, hs;
     fd = open(path, O_RDONLY);
     char magic[3];
     if (fd == -1)
@@ -174,6 +174,7 @@ int parse(const char *path)
         printf("section%d: %s %d %d\n", i+1, arr[i].name, arr[i].type, arr[i].size);
     }
     close(fd);
+    free(arr);
     return 0;
 }
 
