@@ -7,6 +7,14 @@
 #include <fcntl.h>
 #include <dirent.h>
 
+typedef struct sec_header
+{
+    char name[15];
+    int type;
+    int offset;
+    int size;
+} sec_header;
+
 int list_dir(const char *path, const char *filter)
 {
     DIR *dir = NULL;
@@ -144,8 +152,27 @@ int parse(const char *path)
         puts("wrong sect_nr");
         return -1;
     }
+    sec_header* arr = malloc(nr_sect*sizeof(sec_header));
+    for (int i = 0; i < nr_sect; i++)
+    {
+        read(fd, arr[i].name, 15);
+        read(fd, &arr[i].type, 2);
+        read(fd,&arr[i].offset, 4);
+        read(fd,&arr[i].size,4);
+        if (arr[i].type != 51 && arr[i].type!= 69 && arr[i].type != 63 && arr[i].type != 45 && arr[i].type != 53 && arr[i].type != 90 && arr[i].type != 40)
+        {
+            puts("ERROR");
+            puts("wrong sect_types");
+            return -1;
+        }
+    }
     printf("SUCCESS\n");
-
+    printf("version=%d\n", version);
+    printf("nr_sections=%d\n", nr_sect);
+    for(int i = 0;i<nr_sect;i++)
+    {
+        printf("section%d: %s %d %d\n", i+1, arr[i].name, arr[i].type, arr[i].size);
+    }
     close(fd);
     return 0;
 }
