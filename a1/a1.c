@@ -178,6 +178,60 @@ int parse(const char *path)
     return 0;
 }
 
+// int extract(const char* path, int nr, int line)
+// {
+//     int fd, version = 0, nr_sect = 0, hs,ok = 0, nr_line = 1;
+//     fd = open(path, O_RDONLY);
+//     char magic[3];
+//     if (fd == -1)
+//     {
+//         puts("ERORR");
+//         puts("invalid file");
+//         return -1;
+//     }
+//     lseek(fd, -1, SEEK_END);
+//     read(fd, &magic[0], 1);
+//     lseek(fd, -2, SEEK_END);
+//     read(fd, &magic[1], 1);
+//     lseek(fd, -4, SEEK_END);
+//     read(fd, &hs, 2);
+//     lseek(fd, -hs, SEEK_END);
+//     read(fd, &version, 1);
+//     read(fd, &nr_sect, 1);
+//     sec_header* arr = malloc(nr_sect*sizeof(sec_header));
+//     for (int i = 0; i < nr_sect; i++)
+//     {
+//         read(fd, arr[i].name, 15);
+//         read(fd, &arr[i].type, 2);
+//         read(fd,&arr[i].offset, 4);
+//         read(fd,&arr[i].size,4);
+//     }
+//     lseek(fd,arr[nr].offset,SEEK_SET);
+//     char* buffer = malloc((arr[nr].size)*sizeof(char));
+//     for(int i = 0;i<arr[nr].size;i++)
+//     {
+//         read(fd,buffer[ok],1);
+//         if(nr_line == line && buffer[ok] == "0D")
+//         {
+//             write(stdout,buffer,ok);
+//         }
+//         else if(buffer[ok] == "0D")
+//         {
+//             nr_line++;
+//             ok = 0;
+//             memset(buffer,"0",sizeof buffer);
+//         }
+//     }
+//     if(nr_line<line)
+//     {
+//         puts("ERROR");
+//         puts("invalid line");
+//     }
+//     close(fd);
+//     free(arr);
+//     return 0;
+// }
+
 int main(int argc, char **argv)
 {
     char *recursive = NULL;
@@ -225,6 +279,15 @@ int main(int argc, char **argv)
             strcpy(path, argv[2] + 5);
             parse(path);
         }
+        // if (strcmp(argv[1], "extract") == 0)
+        // {
+        //     char sect[1000];
+        //     char line[1000];
+        //     strcpy(path, argv[2] + 5);
+        //     strcpy(sect,argv[3]+8);
+        //     strcpy(line,argv[4] + 5);
+        //     extract(path,atoi(sect), atoi(line));
+        // }
         free(path);
         free(filter);
     }
