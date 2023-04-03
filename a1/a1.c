@@ -15,7 +15,6 @@ typedef struct sec_header
     int size;
 } sec_header;
 
-sec_header* arr;
 
 int list_dir(const char *path, const char *filter)
 {
@@ -154,7 +153,7 @@ int parse(const char *path)
         puts("wrong sect_nr");
         return -1;
     }
-    arr = malloc(nr_sect*sizeof(sec_header));
+    sec_header* arr = malloc(nr_sect*sizeof(sec_header));
     for (int i = 0; i < nr_sect; i++)
     {
         read(fd, arr[i].name, 15);
@@ -175,24 +174,64 @@ int parse(const char *path)
     {
         printf("section%d: %s %d %d\n", i+1, arr[i].name, arr[i].type, arr[i].size);
     }
+    free(arr);
     close(fd);
     return 0;
 }
 
-int extract(const char* path, int nr, int line)
-{
-    int fd;
-    fd = open(path, O_RDONLY);
-    lseek(fd,arr[nr].offset,SEEK_SET);
-    close(fd);
-    return 0;
-}
+// int extract(const char* path, int nr, int line)
+// {
+//     int fd1, version1 = 0, nr_sect1 = 0, hs1, i = 0,ok =1;
+//     int count = 0,nr_lines = 0;
+//     int found_line;
+//     char* buffer = (char*) calloc(512,sizeof(char));
+//     fd1 = open(path, O_RDONLY);
+//     lseek(fd1, -4, SEEK_END);
+//     read(fd1, &hs1, 2);
+//     lseek(fd1, -hs1, SEEK_END);
+//     read(fd1, &version1, 1);
+//     read(fd1, &nr_sect1, 1);
+//     sec_header* array = malloc(nr_sect1*sizeof(sec_header));
+//     for (int i = 0; i < nr_sect1; i++)
+//     {
+//         read(fd1, array[i].name, 15);
+//         read(fd1, &array[i].type, 2);
+//         read(fd1,&array[i].offset, 4);
+//         read(fd1,&array[i].size,4);
+//     }
+//     lseek(fd1,array[nr].offset+array[nr].size,SEEK_SET);
+//     while (ok) {
+//         read(fd1, buffer, -i);
+//         i++;
+//         if (buffer[count - 1] == 0x0D && buffer[count] == 0x0A) {
+//             found_line = 1;
+//             puts("ceau");
+//         }
+//         if (found_line && nr_lines == line) {
+//             printf("ceau");
+//             //write(1, buffer, count);
+//             break;
+//         } else if (found_line) {
+//             nr_lines++;
+//             memset(buffer, 0, count);
+//             count = 0;
+//             found_line = 0;
+//             continue;
+//         }
+//         count++;
+//     }
+//     free(array);
+//     close(fd1);
+//     return 0;
+// }
 
 int main(int argc, char **argv)
 {
     char *recursive = NULL;
     char *filter = (char *)calloc(512, sizeof(char));
     char *path = (char *)calloc(512, sizeof(char));
+    // char* sect = (char*) calloc(512,sizeof(char));
+    // char* line = (char*) calloc(512,sizeof(char));
     if (argc >= 2)
     {
         if (strcmp(argv[1], "variant") == 0)
@@ -235,18 +274,17 @@ int main(int argc, char **argv)
             strcpy(path, argv[2] + 5);
             parse(path);
         }
-        if (strcmp(argv[1], "extract") == 0)
-        {
-            char sect[1000];
-            char line[1000];
-            strcpy(path, argv[2] + 5);
-            strcpy(sect,argv[3]+8);
-            strcpy(line,argv[4] + 5);
-            extract(path,atoi(sect), atoi(line));
-        }
+        // if (strcmp(argv[1], "extract") == 0)
+        // {
+        //     strcpy(path, argv[2] + 5);
+        //     strcpy(sect,argv[3]+8);
+        //     strcpy(line,argv[4] + 5);
+        //     extract(path,atoi(sect), atoi(line));
+        // }
         free(path);
         free(filter);
-        free(arr);
+        // free(sect);
+        // free(line);
     }
 
     return 0;
