@@ -245,7 +245,7 @@ int findall(const char *path, int flag)
     char fullPath[512] = {};
     dir = opendir(path);
     struct stat statbuf = {};
-    int fd1, nr_sect1 = 0, version1 = 0, nr_lines = 1;
+    int fd1, nr_sect1 = 0, version1 = 0, nr_lines = 1, check = 0;
     short hs1;
     off_t off;
     if (flag)
@@ -298,21 +298,35 @@ int findall(const char *path, int flag)
                     read(fd1, &array[i + 1].type, 2);
                     read(fd1, &array[i + 1].offset, 4);
                     read(fd1, &array[i + 1].size, 4);
+                    if (array[i+1].type != 51 && array[i+1].type != 69 && array[i+1].type != 63 && array[i+1].type != 45 && array[i+1].type != 53 && array[i+1].type != 90 && array[i+1].type != 40)
+                    {
+                        check = 1;
+                        break;
+                    }
+                }
+                if(check)
+                {
+                    check = 0;
+                    free(array);
+                    continue;
                 }
                 for (int i = 0; i < nr_sect1; i++)
                 {
                     off = lseek(fd1, array[i + 1].offset + array[i + 1].size, SEEK_SET);
                     lseek(fd1, off, SEEK_SET);
-                    char *buffer = calloc(1, sizeof(char));
+                    char *buffer = calloc(11,sizeof(char));
                     while (off >= array[i + 1].offset)
                     {
-                        read(fd1, buffer, 1);
-                        lseek(fd1, -2, SEEK_CUR);
-                        if (*buffer == '\n')
+                        read(fd1, buffer, 11);
+                        lseek(fd1, -12, SEEK_CUR);
+                        for(int j =0;j<11;j++)
                         {
-                            nr_lines++;
+                            if(buffer[j] == '\n')
+                            {
+                                nr_lines++;
+                            }
                         }
-                        off--;
+                        off-=11;
                     }
                     free(buffer);
                     if (nr_lines > 13)
