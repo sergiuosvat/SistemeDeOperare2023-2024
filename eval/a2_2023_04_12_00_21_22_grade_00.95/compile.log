@@ -1,0 +1,13 @@
+a2.c: In function 'main':
+a2.c:39:20: warning: initialization of 'pthread_t' {aka 'struct __pthread *'} from 'int' makes pointer from integer without a cast [-Wint-conversion]
+   39 |     pthread_t t1 = -1, t2 = -1, t3 = -1, t4 = -1, tid[47], tid2[5];
+      |                    ^
+a2.c:39:29: warning: initialization of 'pthread_t' {aka 'struct __pthread *'} from 'int' makes pointer from integer without a cast [-Wint-conversion]
+   39 |     pthread_t t1 = -1, t2 = -1, t3 = -1, t4 = -1, tid[47], tid2[5];
+      |                             ^
+a2.c:39:38: warning: initialization of 'pthread_t' {aka 'struct __pthread *'} from 'int' makes pointer from integer without a cast [-Wint-conversion]
+   39 |     pthread_t t1 = -1, t2 = -1, t3 = -1, t4 = -1, tid[47], tid2[5];
+      |                                      ^
+a2.c:39:47: warning: initialization of 'pthread_t' {aka 'struct __pthread *'} from 'int' makes pointer from integer without a cast [-Wint-conversion]
+   39 |     pthread_t t1 = -1, t2 = -1, t3 = -1, t4 = -1, tid[47], tid2[5];
+      |                                               ^
