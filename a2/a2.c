@@ -6,13 +6,44 @@
 #include <sys/wait.h>
 #include "a2_helper.h"
 
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+typedef struct{
+    int id;
+}PARAMS;
+
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+int var = 0;
 
 void *thread8(void *arg)
 {
-    int id = *(int *)arg;
-    info(BEGIN, 8, id);
-    info(END, 8, id);
+    PARAMS *p = (PARAMS *)arg;
+    if(p->id != 3 && p->id!=4)
+    {
+        info(BEGIN, 8, p->id);
+    }
+    if(p->id == 3)
+    {
+        info(BEGIN, 8, p->id);
+        pthread_mutex_lock(&lock);
+        while(var == 0)
+        {
+            pthread_cond_wait(&cond, &lock);
+        }
+        pthread_mutex_unlock(&lock);
+        info(END, 8, p->id);
+        pthread_exit(NULL);
+    }
+    if(p->id == 4)
+    {
+        info(BEGIN, 8, p->id);
+        pthread_mutex_lock(&lock);
+        var = 1;
+        info(END, 8, p->id);
+        pthread_cond_signal(&cond);
+        pthread_mutex_unlock(&lock);
+        pthread_exit(NULL);
+    }
+    info(END, 8, p->id);
     pthread_exit(NULL);
 }
 
@@ -35,8 +66,7 @@ void *thread7(void *arg)
 int main()
 {
     pid_t pid2, pid3, pid4, pid5, pid6, pid7, pid8, pid9;
-    int t1_arg = 1, t2_arg = 2, t3_arg = 3, t4_arg = 4;
-    pthread_t t1 = -1, t2 = -1, t3 = -1, t4 = -1, tid[47], tid2[5];
+    pthread_t t1[4] = {-1}, tid[47] = {-1}, tid2[5] = {-1};
     init();
     info(BEGIN, 1, 0);
     pid2 = fork();
@@ -121,14 +151,21 @@ int main()
         if (pid8 == 0)
         {
             info(BEGIN, 8, 0);
-            pthread_create(&t1, NULL, thread8, &t1_arg);
-            pthread_create(&t2, NULL, thread8, &t2_arg);
-            pthread_create(&t3, NULL, thread8, &t3_arg);
-            pthread_create(&t4, NULL, thread8, &t4_arg);
-            pthread_join(t1, NULL);
-            pthread_join(t2, NULL);
-            pthread_join(t3, NULL);
-            pthread_join(t4, NULL);
+            int param[4] = {1,2,3,4};
+            // for(int i = 0;i<4;i++)
+            // {
+            //     param[i].id = i+1;
+            //     pthread_create(&t1[i], NULL, thread8, &param[i]);
+            // }
+            pthread_create(&t1[2], NULL, thread8, &param[2]);
+            pthread_create(&t1[0], NULL, thread8, &param[0]);
+            pthread_create(&t1[1], NULL, thread8, &param[1]);
+            pthread_create(&t1[3], NULL, thread8, &param[3]);
+            for(int i =0;i<4;i++)
+            {
+                pthread_join(t1[i],NULL);
+            }
+            pthread_mutex_destroy(&lock);
             info(END, 8, 0);
             exit(0);
         }
