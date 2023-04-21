@@ -4,40 +4,36 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <sys/wait.h>
+#include <semaphore.h>
 #include "a2_helper.h"
 
 typedef struct
 {
     int id;
 } PARAMS;
-
-pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t lock2 = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
-int var = 0;
+sem_t sem8_1;
+sem_t sem8_2;
 
 void *thread8(void *arg)
 {
-    PARAMS *p = (PARAMS *)arg;
-    if (p->id == 3)
+    int id = *(int *)arg;
+    if (id == 3)
     {
-        info(BEGIN, 8, p->id);
-        pthread_mutex_unlock(&lock2);
-        pthread_mutex_lock(&lock);
-        info(END, 8, p->id);
-        // pthread_exit(NULL);
+        info(BEGIN, 8, id);
+        sem_post(&sem8_1);
+        sem_wait(&sem8_2);
+        info(END, 8, id);
     }
-    else if (p->id == 4)
+    else if (id == 4)
     {
-        pthread_mutex_lock(&lock2);
-        info(BEGIN, 8, p->id);
-        info(END, 8, p->id);
-        pthread_mutex_unlock(&lock);
-        // pthread_exit(NULL);
+        sem_wait(&sem8_1);
+        info(BEGIN, 8, id);
+        info(END, 8, id);
+        sem_post(&sem8_2);
     }
     else{
-        info(BEGIN,8,p->id);
-        info(END,8,p->id);
+        info(BEGIN,8,id);
+        info(END,8,id);
     }
     pthread_exit(NULL);
 }
@@ -147,7 +143,9 @@ int main()
         {
             pthread_t t1[4];
             info(BEGIN, 8, 0);
-            int param[4] = {1, 2, 3, 4};
+            int param[4];
+            sem_init(&sem8_1,0,0);
+            sem_init(&sem8_2,0,0);
             for(int i = 0;i<4;i++)
             {
                 param[i] = i+1;
@@ -158,9 +156,6 @@ int main()
             {
                 pthread_join(t1[i], NULL);
             }
-
-            pthread_mutex_destroy(&lock);
-            pthread_mutex_destroy(&lock2);
             info(END, 8, 0);
             exit(0);
         }
