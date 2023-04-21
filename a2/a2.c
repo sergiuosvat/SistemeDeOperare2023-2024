@@ -5,7 +5,10 @@
 #include <pthread.h>
 #include <sys/wait.h>
 #include <semaphore.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 #include "a2_helper.h"
+
 
 typedef struct
 {
@@ -16,12 +19,21 @@ sem_t sem8_2;
 sem_t sem6;
 sem_t sem6_2;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-int count = 0;
+int count = 1;
 
 void *thread8(void *arg)
 {
     int id = *(int *)arg;
-    if (id == 3)
+    if(id == 2)
+    {
+        sem_t* sem2 = sem_open("sem2", O_CREAT, 0644,0);
+        sem_t* sem5 = sem_open("sem5", O_CREAT, 0644, 0);
+        sem_wait(sem2);
+        info(BEGIN, 8, id);
+        info(END, 8, id);
+        sem_post(sem5);
+    }
+    else if (id == 3)
     {
         info(BEGIN, 8, id);
         sem_post(&sem8_1);
@@ -49,13 +61,9 @@ void *thread6(void *arg)
     sem_wait(&sem6);
     pthread_mutex_lock(&mutex);
     count++;
-    if(count == 6)
-    {
-        sem_post(&sem6_2);
-    }
     pthread_mutex_unlock(&mutex);
     info(BEGIN, 6, id);
-    if (id == 11)
+    if (id == 11 && count == 6)
     {
         sem_wait(&sem6_2);
         info(END, 6, id);
@@ -74,8 +82,23 @@ void *thread6(void *arg)
 void *thread7(void *arg)
 {
     int id = *(int *)arg;
-    info(BEGIN, 7, id);
-    info(END, 7, id);
+    sem_t* sem2 = sem_open("sem2", O_CREAT,0);
+    if(id == 1)
+    {
+        info(BEGIN, 7, id);
+        info(END, 7, id);
+        sem_post(sem2);
+    }else if(id == 5){
+        sem_t* sem5 = sem_open("sem5", O_CREAT,0);
+        sem_wait(sem5);
+        info(BEGIN,7,id);
+        info(END,7,id);
+    }
+    else{
+        info(BEGIN, 7, id);
+        info(END, 7, id);
+    }
+    
     pthread_exit(NULL);
 }
 
@@ -117,11 +140,11 @@ int main()
                 info(BEGIN, 6, 0);
                 sem_init(&sem6, 0, 6);
                 sem_init(&sem6_2, 0, 0);
+                int param2[47];
                 for (int i = 0; i < 47; i++)
                 {
-                    int *id = malloc(sizeof(int));
-                    *id = i + 1;
-                    pthread_create(&tid[i], NULL, thread6, id);
+                    param2[i] = i+1;
+                    pthread_create(&tid[i], NULL, thread6, &param2[i]);
                 }
                 for (int i = 0; i < 47; i++)
                 {
