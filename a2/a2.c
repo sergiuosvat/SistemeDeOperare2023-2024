@@ -13,6 +13,10 @@ typedef struct
 } PARAMS;
 sem_t sem8_1;
 sem_t sem8_2;
+sem_t sem6;
+sem_t sem6_2;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+int count = 0;
 
 void *thread8(void *arg)
 {
@@ -31,9 +35,10 @@ void *thread8(void *arg)
         info(END, 8, id);
         sem_post(&sem8_2);
     }
-    else{
-        info(BEGIN,8,id);
-        info(END,8,id);
+    else
+    {
+        info(BEGIN, 8, id);
+        info(END, 8, id);
     }
     pthread_exit(NULL);
 }
@@ -41,8 +46,28 @@ void *thread8(void *arg)
 void *thread6(void *arg)
 {
     int id = *(int *)arg;
+    sem_wait(&sem6);
+    pthread_mutex_lock(&mutex);
+    count++;
+    if(count == 6)
+    {
+        sem_post(&sem6_2);
+    }
+    pthread_mutex_unlock(&mutex);
     info(BEGIN, 6, id);
-    info(END, 6, id);
+    if (id == 11)
+    {
+        sem_wait(&sem6_2);
+        info(END, 6, id);
+    }
+    else
+    {
+        info(END, 6, id);
+        pthread_mutex_lock(&mutex);
+        count--;
+        pthread_mutex_unlock(&mutex);
+    }
+    sem_post(&sem6);
     pthread_exit(NULL);
 }
 
@@ -90,6 +115,8 @@ int main()
             if (pid6 == 0)
             {
                 info(BEGIN, 6, 0);
+                sem_init(&sem6, 0, 6);
+                sem_init(&sem6_2, 0, 0);
                 for (int i = 0; i < 47; i++)
                 {
                     int *id = malloc(sizeof(int));
@@ -144,11 +171,11 @@ int main()
             pthread_t t1[4];
             info(BEGIN, 8, 0);
             int param[4];
-            sem_init(&sem8_1,0,0);
-            sem_init(&sem8_2,0,0);
-            for(int i = 0;i<4;i++)
+            sem_init(&sem8_1, 0, 0);
+            sem_init(&sem8_2, 0, 0);
+            for (int i = 0; i < 4; i++)
             {
-                param[i] = i+1;
+                param[i] = i + 1;
                 pthread_create(&t1[i], NULL, thread8, &param[i]);
             }
 
