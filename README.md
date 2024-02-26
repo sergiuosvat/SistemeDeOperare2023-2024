@@ -1,2 +1,2 @@
-# SistemeDeOperare2023-2024
+# Projects for the Operating Systems class
 
